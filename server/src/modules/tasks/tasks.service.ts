@@ -1,3 +1,4 @@
+import { Prisma, Task } from '@prisma/client';
 import { db } from '../../lib/db';
 import { badRequest, forbidden, notFound } from '../../lib/http';
 import { formatDueDate, parseDueDate, parsePublicId, toPublicId } from '../../lib/ids';
@@ -60,17 +61,17 @@ export async function createTask(projectId: number, userId: number, body: Record
     throw badRequest('dueDate must be a calendar date in YYYY-MM-DD format');
   }
 
-  const task = await db.task.create({
-    data: {
-      ...(body as object),
-      projectId,
-      title,
-      description: description ?? null,
-      priority,
-      assigneeId,
-      dueDate: dueDate ?? null,
-    } as never,
-  });
+  const data: Prisma.TaskUncheckedCreateInput = {
+    projectId,
+    title,
+    description: description ?? null,
+    priority,
+    assigneeId,
+    dueDate: dueDate ?? null,
+    status: 'TODO',
+  };
+
+  const task = await db.task.create({ data });
 
   await db.taskHistory.create({
     data: { taskId: task.id, changedById: userId, fromStatus: null, toStatus: task.status },
@@ -79,17 +80,8 @@ export async function createTask(projectId: number, userId: number, body: Record
   return serializeTask(task);
 }
 
-/**
- * Actualiza una tarea: valida los campos recibidos, aplica las reglas de
- * autorización, resuelve la transición de estado, escribe el historial y
- * devuelve la tarea serializada.
- */
-export async function updateTask(taskId: number, userId: number, body: Record<string, unknown>) {
-  const task = await db.task.findUnique({ where: { id: taskId } });
-  if (!task) throw notFound('Task not found');
-
-  const data: Record<string, unknown> = {};
-  let nextStatus: Status | null = null;
+export function buildTaskUpdate(body: Record<string, unknown>): Prisma.TaskUncheckedUpdateInput {
+  const data: Prisma.TaskUncheckedUpdateInput = {};
 
   if (body.title !== undefined) {
     data.title = assertString(body.title, 'title', 3, 200);
@@ -112,44 +104,54 @@ export async function updateTask(taskId: number, userId: number, body: Record<st
     data.dueDate = parsed;
   }
 
+  return data;
+}
+
+export async function resolveAssignee(rawAssigneeId: unknown, projectId: number): Promise<number | null> {
+  if (rawAssigneeId === null) return null;
+
+  const assigneeId = parsePublicId(rawAssigneeId, 'user');
+  if (assigneeId === null) throw badRequest('assigneeId must be a valid user id');
+  if (!(await isMember(assigneeId, projectId))) {
+    throw badRequest('The assignee must be a member of the project');
+  }
+
+  return assigneeId;
+}
+
+export async function assertCanChangeStatus(task: Task, userId: number): Promise<void> {
+  if (task.assigneeId === userId) return;
+
+  const membership = await db.projectMember.findUnique({
+    where: { projectId_userId: { projectId: task.projectId, userId } },
+  });
+  if (!membership || (membership.role !== 'OWNER' && membership.role !== 'ADMIN')) {
+    throw forbidden('Only the assignee or a project admin can change the status');
+  }
+}
+
+/**
+ * Actualiza una tarea: valida los campos recibidos, aplica las reglas de
+ * autorización, resuelve la transición de estado, escribe el historial y
+ * devuelve la tarea serializada.
+ */
+export async function updateTask(taskId: number, userId: number, body: Record<string, unknown>) {
+  const task = await db.task.findUnique({ where: { id: taskId } });
+  if (!task) throw notFound('Task not found');
+
+  const data = buildTaskUpdate(body);
+  let nextStatus: Status | null = null;
+
   if (body.assigneeId !== undefined) {
-    if (body.assigneeId === null) {
-      data.assigneeId = null;
-    } else {
-      const parsed = parsePublicId(body.assigneeId, 'user');
-      if (parsed === null) {
-        throw badRequest('assigneeId must be a valid user id');
-      } else {
-        const memberOfProject = await isMember(parsed, task.projectId);
-        if (!memberOfProject) {
-          throw badRequest('The assignee must be a member of the project');
-        } else {
-          data.assigneeId = parsed;
-        }
-      }
-    }
+    data.assigneeId = await resolveAssignee(body.assigneeId, task.projectId);
   }
 
   if (body.status !== undefined) {
     const requested = assertStatus(body.status);
     if (requested !== task.status) {
-      const isAssignee = task.assigneeId === userId;
-      if (!isAssignee) {
-        const membership = await db.projectMember.findUnique({
-          where: { projectId_userId: { projectId: task.projectId, userId } },
-        });
-        if (!membership) {
-          throw forbidden('Only the assignee or a project admin can change the status');
-        } else if (membership.role !== 'OWNER' && membership.role !== 'ADMIN') {
-          throw forbidden('Only the assignee or a project admin can change the status');
-        } else {
-          assertTransition(task.status as Status, requested);
-          nextStatus = requested;
-        }
-      } else {
-        assertTransition(task.status as Status, requested);
-        nextStatus = requested;
-      }
+      await assertCanChangeStatus(task, userId);
+      assertTransition(assertStatus(task.status), requested);
+      nextStatus = requested;
     }
   }
 
