@@ -10,16 +10,16 @@ export interface TaskFilters {
 
 /** Arma el filtro de Prisma a partir de los parámetros de query. */
 export function buildFilters(projectId: number, f: TaskFilters): Prisma.TaskWhereInput {
-  let where: Prisma.TaskWhereInput = { projectId };
+  const where: Prisma.TaskWhereInput = { projectId };
 
   if (f.status) {
-    where = { projectId, status: f.status };
+    where.status = f.status;
   }
   if (f.priority) {
-    where = { projectId, priority: f.priority };
+    where.priority = f.priority;
   }
   if (f.assigneeId !== undefined) {
-    where = { projectId, assigneeId: f.assigneeId };
+    where.assigneeId = f.assigneeId;
   }
   if (f.search) {
     where.OR = [{ title: { contains: f.search } }, { description: { contains: f.search } }];
