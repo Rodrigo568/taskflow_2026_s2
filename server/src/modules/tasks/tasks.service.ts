@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { db } from '../../lib/db';
 import { badRequest, forbidden, notFound } from '../../lib/http';
 import { formatDueDate, parseDueDate, parsePublicId, toPublicId } from '../../lib/ids';
@@ -60,17 +61,17 @@ export async function createTask(projectId: number, userId: number, body: Record
     throw badRequest('dueDate must be a calendar date in YYYY-MM-DD format');
   }
 
-  const task = await db.task.create({
-    data: {
-      ...(body as object),
-      projectId,
-      title,
-      description: description ?? null,
-      priority,
-      assigneeId,
-      dueDate: dueDate ?? null,
-    } as never,
-  });
+  const data: Prisma.TaskUncheckedCreateInput = {
+    projectId,
+    title,
+    description: description ?? null,
+    priority,
+    assigneeId,
+    dueDate: dueDate ?? null,
+    status: 'TODO',
+  };
+
+  const task = await db.task.create({ data });
 
   await db.taskHistory.create({
     data: { taskId: task.id, changedById: userId, fromStatus: null, toStatus: task.status },
