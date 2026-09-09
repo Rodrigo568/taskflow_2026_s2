@@ -28,11 +28,32 @@ export function buildFilters(projectId: number, f: TaskFilters): Prisma.TaskWher
   return where;
 }
 
-export async function findTasks(projectId: number, f: TaskFilters) {
+export interface Page {
+  limit: number;
+  offset: number;
+}
+
+export async function findTasks(projectId: number, f: TaskFilters, page: Page) {
   return db.task.findMany({
     where: buildFilters(projectId, f),
+    include: { assignee: { select: { id: true, email: true } } },
     orderBy: { id: 'asc' },
+    take: page.limit,
+    skip: page.offset,
   });
+}
+
+/** Cantidad de comentarios por tarea, en una sola consulta. */
+export async function countCommentsByTask(taskIds: number[]): Promise<Map<number, number>> {
+  if (taskIds.length === 0) return new Map();
+
+  const rows = await db.comment.groupBy({
+    by: ['taskId'],
+    where: { taskId: { in: taskIds } },
+    _count: true,
+  });
+
+  return new Map(rows.map((r) => [r.taskId, r._count]));
 }
 
 export async function countTasks(projectId: number, f: TaskFilters): Promise<number> {

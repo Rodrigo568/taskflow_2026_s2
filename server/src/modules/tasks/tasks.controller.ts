@@ -27,23 +27,23 @@ export async function listByProject(req: Request, res: Response, next: NextFunct
     const limit = Math.min(Number(req.query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
     const offset = Number(req.query.offset) || 0;
 
-    const rows = await repo.findTasks(projectId, filters);
+    const [rows, total] = await Promise.all([
+      repo.findTasks(projectId, filters, { limit, offset }),
+      repo.countTasks(projectId, filters),
+    ]);
 
-    const items = [];
-    for (const row of rows) {
-      const assignee = row.assigneeId
-        ? await db.user.findUnique({ where: { id: row.assigneeId } })
-        : null;
-      const commentCount = await db.comment.count({ where: { taskId: row.id } });
-      items.push(
-        service.serializeTask(row as service.TaskRow, {
-          assignee: assignee ? { id: toPublicId('user', assignee.id), email: assignee.email } : null,
-          commentCount,
-        }),
-      );
-    }
+    const commentCounts = await repo.countCommentsByTask(rows.map((r) => r.id));
 
-    res.json({ items, total: rows.length, limit, offset });
+    const items = rows.map((row) =>
+      service.serializeTask(row, {
+        assignee: row.assignee
+          ? { id: toPublicId('user', row.assignee.id), email: row.assignee.email }
+          : null,
+        commentCount: commentCounts.get(row.id) ?? 0,
+      }),
+    );
+
+    res.json({ items, total, limit, offset });
   } catch (err) {
     next(err);
   }
