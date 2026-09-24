@@ -6,3 +6,8 @@ coverage/
 .env
 server/tests/.tmp/
 .DS_Store
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/

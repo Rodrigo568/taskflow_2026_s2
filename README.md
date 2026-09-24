@@ -80,6 +80,8 @@ El comando `db:setup` carga datos de ejemplo. Los tres usuarios comparten la con
 | `npm run db:reset` | Borra la base y la vuelve a crear desde cero |
 | `npm test` | Corre la suite de tests |
 | `npm run test:coverage` | Corre la suite con reporte de cobertura |
+| `npm run test:e2e` | Corre los tests end-to-end con Playwright (levanta API y frontend solos). La primera vez: `npx playwright install chromium` |
+| `npm run test:e2e:report` | Abre el reporte HTML de la última corrida e2e |
 
 ## Frontend
 
@@ -179,6 +181,12 @@ taskflow/
 │   └── src/
 │       ├── pages/       # login, proyectos, tablero, detalle, miembros
 │       └── lib/         # cliente HTTP, sesión, helpers
+├── e2e/
+│   ├── components/      # Component Objects (piezas repetidas de la UI)
+│   ├── pages/           # Page Objects (una clase por pantalla)
+│   ├── support/         # cliente de la API para preparar datos
+│   ├── fixtures.ts      # fixtures de Playwright (api, sesión, páginas)
+│   └── tests/
 └── README.md
 ```
 
