@@ -41,6 +41,46 @@ El patrón principal es la **prueba de integración de API**. Cada caso envía s
 - Los helpers reducen el código de preparación, pero mantienen parte del setup fuera de cada escenario; al leer un test hay que consultar `helpers.ts` para ver exactamente qué solicitudes crean sus datos.
 - Esta arquitectura no aporta por sí sola evidencia sobre la interfaz web ni sobre atributos no funcionales como latencia bajo carga.
 
+## Evaluación de un cambio: aislamiento de datos por caso
+
+### Problema observado
+
+Cada archivo de pruebas recibe su propia base SQLite, pero los casos de un mismo archivo comparten esa base durante toda la ejecución. Si un caso dependiera de datos creados por otro, el resultado podría cambiar según el orden de ejecución o al correr un caso aislado con `-t`.
+
+### Qué muestran las suites actuales
+
+- Cada caso crea su propio usuario con un email distinto (`com1@test.com`, `proj2@test.com`, `filtros-...-${Date.now()}@test.com`) y, cuando corresponde, su propio proyecto.
+- Las consultas que verifican cantidades (`toHaveLength(2)`, `total: 3`) están acotadas al proyecto o al usuario creado en el mismo caso, por lo que los datos de otros casos no entran en el resultado.
+- En la ejecución del 2026-09-24 (`npm test`: 33 casos, cerca de 21 s), los 4 casos que fallan esperan un `400` y reciben `201` en validaciones de contraseña y nombre de proyecto. Son fallas de validación de la API, no efectos de datos compartidos.
+
+El aislamiento por caso hoy se logra **por datos**: cada escenario genera los suyos y no lee los de otro. La base compartida dentro del archivo no produce interferencias observables.
+
+### Alternativas evaluadas
+
+| Alternativa | Ventajas | Costos |
+| --- | --- | --- |
+| A. Base nueva por caso (copiar la plantilla en `beforeEach`) | Aislamiento total; cada caso parte de una base vacía. | `src/lib/db.ts` crea un único `PrismaClient` al importar el módulo y `helpers.ts` crea `app` al cargarse. Cambiar de base en cada caso obliga a desconectar y recrear el cliente, o a reiniciar módulos e importar la app de nuevo en cada test. Suma tiempo por caso y complejidad al setup. |
+| B. Vaciar las tablas en `beforeEach` | Mantiene una sola conexión; cada caso parte de tablas vacías. | Hay que borrar 9 modelos respetando las claves foráneas y actualizar esa lista cada vez que cambia el esquema. Si se olvida una tabla, el aislamiento falla sin avisar. |
+| C. Mantener la base por suite y formalizar la convención de datos únicos | Sin costo de ejecución. Conserva la rapidez actual. | Depende de que quien escriba un test respete la convención. |
+
+### Criterios usados para decidir
+
+- **Aislamiento y repetibilidad:** el beneficio de A y B sería evitar interferencias entre casos, pero no se observan: cada caso ya usa datos propios.
+- **Rapidez:** A agrega preparación en cada uno de los 33 casos. B agrega borrados en cada caso. C no agrega nada.
+- **Mantenibilidad:** B acopla el setup al esquema de Prisma. A complica la carga de la app y de la base. C solo requiere una regla simple.
+- **Diagnóstico de fallas:** los fallos actuales ya se atribuyen a la API y no al orden de ejecución, así que ninguna alternativa mejora el diagnóstico hoy.
+
+### Decisión
+
+**Se mantiene la base temporal por suite (alternativa C).** El beneficio de aislar cada caso con una base nueva o con limpieza de tablas no compensa su costo, porque las suites ya logran independencia con datos propios.
+
+Como ajuste menor, se propone hacer explícita la convención que hoy es implícita:
+
+- Agregar a `server/tests/helpers.ts` un generador de emails únicos, por ejemplo `uniqueEmail('proyecto')` con `crypto.randomUUID()`. Así se reemplaza la mezcla actual de emails fijos y `Date.now()`, que puede repetir valor si dos llamadas ocurren en el mismo milisegundo.
+- Mantener como regla que cada caso cree su propio usuario y proyecto, y que no lea datos creados por otro caso.
+
+La decisión se revisa si aparecen pruebas que consulten datos globales, sin acotar a un usuario o proyecto (por ejemplo, un listado de todos los usuarios), o fallas que dependan del orden de ejecución.
+
 ## Referencias del repositorio
 
 - Configuración y comandos: `server/jest.config.js`, `server/package.json`, `package.json`.
