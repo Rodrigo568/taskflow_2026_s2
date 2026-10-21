@@ -1,0 +1,29 @@
+
+> taskflow-client@1.0.0 test:contract:provider
+> vitest run contract-tests/provider
+
+
+ RUN  v2.1.9 C:/Users/mcaballero/Documents/Testing2026/taskflow_2026_s2/client
+
+(node:12480) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+Verifying a pact between TaskFlowWeb and TaskFlowAPI
+
+  un GET a /api/projects (1ms loading, 144ms verification)
+     Given el usuario ana tiene proyectos
+    returns a response which
+      has status code 200 (OK)
+      includes headers
+        "Content-Type" with value "application/json" (OK)
+      has a matching body (OK)
+
+
+ ✓ contract-tests/provider/projects.provider.test.ts (1 test) 577ms
+   ✓ TaskFlowAPI cumple el contrato con TaskFlowWeb > verifica pacts/TaskFlowWeb-TaskFlowAPI.json 575ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  20:32:02
+   Duration  3.89s (transform 94ms, setup 0ms, collect 1.92s, tests 577ms, environment 0ms, prepare 454ms)
+

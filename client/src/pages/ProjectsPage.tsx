@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, ApiError } from '../lib/api';
+import { getProjects } from '../lib/project';
 import { EmptyState, ErrorMessage, Loading } from '../lib/ui';
 import type { Project } from '../types';
 
@@ -16,7 +17,7 @@ export default function ProjectsPage() {
   const load = useCallback(async () => {
     setLoadError(null);
     try {
-      const data = await api<Project[]>('/projects');
+      const data = await getProjects();
       setProjects(data);
     } catch (err) {
       setProjects([]);

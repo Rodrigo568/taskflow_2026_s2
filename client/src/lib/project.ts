@@ -9,6 +9,11 @@ interface ProjectState {
   reload: () => Promise<void>;
 }
 
+/** GET /api/projects. Sin argumentos usa la API del proxy y el token guardado. */
+export function getProjects(baseUrl?: string, token?: string): Promise<Project[]> {
+  return api<Project[]>('/projects', { baseUrl, token });
+}
+
 export function useProject(projectId: string | undefined): ProjectState {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +24,7 @@ export function useProject(projectId: string | undefined): ProjectState {
     setLoading(true);
     setError(null);
     try {
-      const projects = await api<Project[]>('/projects');
+      const projects = await getProjects();
       const found = projects.find((p) => p.id === projectId) ?? null;
       setProject(found);
       if (!found) setError('No se encontró el proyecto');

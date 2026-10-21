@@ -1,0 +1,45 @@
+
+> taskflow-client@1.0.0 test:contract:provider
+> vitest run contract-tests/provider
+
+
+ RUN  v2.1.9 C:/Users/mcaballero/Documents/Testing2026/taskflow_2026_s2/client
+
+(node:11360) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+Verifying a pact between TaskFlowWeb and TaskFlowAPI
+
+  un GET a /api/projects (2ms loading, 208ms verification)
+     Given el usuario ana tiene proyectos
+    returns a response which
+      has status code 200 (OK)
+      includes headers
+        "Content-Type" with value "application/json" (OK)
+      has a matching body (FAILED)
+
+
+Failures:
+
+1) Verifying a pact between TaskFlowWeb and TaskFlowAPI Given el usuario ana tiene proyectos - un GET a /api/projects
+    1.1) has a matching body
+           $[0] -> Actual map is missing the following keys: name
+
+There were 1 pact failures
+
+[20:33:21.371] ERROR (11360): pact-core@16.1.1: Verification unsuccessful
+   × TaskFlowAPI cumple el contrato con TaskFlowWeb > verifica pacts/TaskFlowWeb-TaskFlowAPI.json 986ms
+     → Verfication failed
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  contract-tests/provider/projects.provider.test.ts > TaskFlowAPI cumple el contrato con TaskFlowWeb > verifica pacts/TaskFlowWeb-TaskFlowAPI.json
+Error: Verfication failed
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  20:33:17
+   Duration  4.30s (transform 96ms, setup 0ms, collect 1.84s, tests 990ms, environment 0ms, prepare 459ms)
+

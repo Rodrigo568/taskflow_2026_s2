@@ -45,21 +45,24 @@ export class ApiError extends Error {
 interface RequestOptions {
   method?: string;
   body?: unknown;
+  // Fuera del navegador (tests de contrato) se indica la API y el token a mano.
+  baseUrl?: string;
+  token?: string | null;
 }
 
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {};
-  const token = getToken();
+  const token = options.token !== undefined ? options.token : getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
 
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${options.baseUrl ?? ''}/api${path}`, {
     method: options.method ?? 'GET',
     headers,
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
 
-  if (res.status === 401) {
+  if (res.status === 401 && options.token === undefined) {
     clearToken();
   }
 
