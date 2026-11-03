@@ -1,0 +1,155 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "checks": {
+                    "login 200": {
+                        "name": "login 200",
+                        "path": "::setup::login 200",
+                        "id": "647055af8ffe21e58084ae4b140cdda0",
+                        "passes": 1,
+                        "fails": 0
+                    }
+                },
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {}
+            }
+        },
+        "checks": {
+            "status 200": {
+                "fails": 0,
+                "name": "status 200",
+                "path": "::status 200",
+                "id": "fad9fa412b86fcb03bee97c80dcd61f1",
+                "passes": 30
+            }
+        }
+    },
+    "metrics": {
+        "iterations": {
+            "count": 30,
+            "rate": 0.9782585206814433
+        },
+        "http_req_duration{expected_response:true}": {
+            "max": 129.2705,
+            "p(90)": 19.04664,
+            "p(95)": 21.49215,
+            "avg": 18.439974999999997,
+            "min": 9.8369,
+            "med": 14.37155
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_sending": {
+            "avg": 0.036962499999999995,
+            "min": 0,
+            "med": 0,
+            "max": 0.6294,
+            "p(90)": 0,
+            "p(95)": 0.2490299999999996
+        },
+        "checks": {
+            "passes": 31,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_blocked": {
+            "avg": 1.640115625,
+            "min": 0,
+            "med": 0,
+            "max": 51.3685,
+            "p(90)": 0,
+            "p(95)": 0.5018399999999992
+        },
+        "http_req_waiting": {
+            "p(90)": 19.04664,
+            "p(95)": 21.153074999999998,
+            "avg": 18.0177125,
+            "min": 9.2835,
+            "med": 14.05615,
+            "max": 128.7148
+        },
+        "vus_max": {
+            "max": 1,
+            "value": 1,
+            "min": 1
+        },
+        "http_req_connecting": {
+            "avg": 0.1506375,
+            "min": 0,
+            "med": 0,
+            "max": 3.7052,
+            "p(90)": 0,
+            "p(95)": 0.5018399999999992
+        },
+        "vus": {
+            "max": 1,
+            "value": 1,
+            "min": 1
+        },
+        "iteration_duration": {
+            "p(95)": 1020.741045,
+            "avg": 1015.74173,
+            "min": 1012.9935,
+            "med": 1015.0039999999999,
+            "max": 1023.4259,
+            "p(90)": 1018.46198
+        },
+        "http_req_duration": {
+            "p(95)": 21.49215,
+            "avg": 18.439974999999997,
+            "min": 9.8369,
+            "med": 14.37155,
+            "max": 129.2705,
+            "p(90)": 19.04664,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 32,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_receiving": {
+            "p(90)": 0.8506100000000001,
+            "p(95)": 0.928205,
+            "avg": 0.3852999999999999,
+            "min": 0,
+            "med": 0.51385,
+            "max": 1.0192
+        },
+        "http_reqs": {
+            "count": 32,
+            "rate": 1.0434757553935394
+        },
+        "data_received": {
+            "count": 271847,
+            "rate": 8864.55480238961
+        },
+        "data_sent": {
+            "count": 9223,
+            "rate": 300.7492778748317
+        }
+    },
+    "setup_data": {
+        "headers": {
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoiYW5hQHRlc3QuY29tIiwiaWF0IjoxNzkzNzQ3OTQ1LCJleHAiOjE3OTM4MzQzNDV9.CcXw50ENHgkmQSmh3QWsXC5Cl4w2a9Ag98fMMWNe3Xg"
+        },
+        "url": "http://localhost:3000/api/projects/proj-4/tasks"
+    }
+}
