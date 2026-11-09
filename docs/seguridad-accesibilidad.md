@@ -6,6 +6,8 @@ Ejecución local, 9 de noviembre de 2026. API Express y SQLite de prueba, Node 2
 
 `npm audit` en `server/`: 11 vulnerabilidades high, 1 moderate y 7 low. `npm audit --omit=dev`: 6 high y 1 moderate. Las auditorías son una fotografía del lockfile y de los avisos disponibles al ejecutarlas.
 
+El repositorio no usa un único workspace npm: también se ejecutó `npm audit` en la raíz (1 critical) y `npm audit --omit=dev` en `client/` (3 high). No se suman estos totales porque pueden incluir dependencias repetidas.
+
 | Dependencia | Clasificación | Remediación informada por npm |
 | --- | --- | --- |
 | body-parser, transitiva de Express | Producción, high. GHSA-27r3-jxmh-p828 describe posible denegación de servicio con cuerpo comprimido. | Express 4.22.3, sin cambio mayor según npm. Validar compatibilidad antes de actualizar. |
@@ -23,6 +25,10 @@ Reproducción: registrar A y B; A crea un proyecto y una tarea; B envía `PATCH 
 
 `curl -I /api/health` devolvió `X-Powered-By: Express` y `Access-Control-Allow-Origin: *`; no devolvió CSP, HSTS, X-Frame-Options ni X-Content-Type-Options. Impacto: exposición de tecnología y ausencia de defensas de navegador; el riesgo de CORS depende de credenciales y despliegue. Remediación: definir orígenes permitidos, ocultar el header y configurar headers apropiados para el frontend y HTTPS en producción. HSTS solo opera sobre HTTPS.
 
+### SEC-03: enumeración de cuentas mediante bloqueo — MEDIUM
+
+Registrar una cuenta descartable y enviar ocho intentos de login con contraseña incorrecta, comparándolos con ocho intentos a un correo inexistente. Esperado: respuestas indistinguibles. Obtenido: ambos devuelven 401, pero desde el sexto intento la cuenta existente responde `Account temporarily locked. Try again later.` y la inexistente `Invalid credentials`. Una contraseña correcta también se rechaza durante el bloqueo. Impacto: permite confirmar cuentas y bloquear temporalmente a otras personas. Remediación: respuestas uniformes y límites de intentos que consideren origen y cuenta sin facilitar bloqueo dirigido. Evidencia reproducible: test `compara bloqueo de cuenta existente e inexistente`.
+
 ## Controles y pruebas exploratorias
 
 | Prueba | Esperado | Observado y explicación |
@@ -33,8 +39,10 @@ Reproducción: registrar A y B; A crea un proyecto y una tarea; B envía `PATCH 
 | SQL en email de login | Rechazo | 401; la consulta usa Prisma, sin concatenar SQL. |
 | SQL en búsqueda | Sin obtener todas las tareas | 200 con lista vacía; Prisma trata el texto como valor de filtro. |
 | JWT `alg: none` | Rechazo | 401; `jwt.verify` valida la firma. |
+| Asignar tarea a usuario externo | 400, sin asignación | 400 `The assignee must be a member of the project`, usando el campo real `assigneeId`. |
+| XSS almacenado en título | Mostrar texto, sin ejecutar código | En Chromium, `<img src=x onerror=alert(1)>` apareció como texto en el tablero y como valor del input en detalle. Sin imagen ni diálogo. React renderiza el texto sin interpretarlo como HTML. |
 
-La prueba de XSS almacenado y el recorrido manual completo con teclado quedan pendientes; no se infiere seguridad o conformidad general a partir de los controles anteriores.
+Estas pruebas cubren los casos indicados y no demuestran ausencia de vulnerabilidades generales. Los dos últimos controles son reproducibles con `e2e/tests/seguridad-accesibilidad.spec.ts`.
 
 ## Accesibilidad
 
@@ -44,9 +52,9 @@ Se ejecutó axe con WCAG 2.1 A/AA en login, registro, proyectos, tablero y detal
 | --- | --- | --- | --- |
 | ACC-01 | `tag-add-input` | Robusto | Input sin nombre accesible; corregido con `aria-label`. |
 | ACC-02 | `comment-add-input` | Robusto | Textarea sin nombre accesible; corregido con `aria-label`. |
-| ACC-03 | Detalle de tarea | Operable, WCAG 2.4.6 AA | Revisión de código: falta un encabezado principal que identifique la tarea; proponer un `h1` descriptivo. Este hallazgo requiere validación manual adicional. |
+| ACC-03 | Botón `tag-remove-button` en detalle | Robusto, WCAG 4.1.2 nivel A | El nombre accesible es solamente `×` para todas las etiquetas: no comunica que elimina ni cuál elimina. Detectado inspeccionando el nombre accesible en Chromium. Propuesta: `aria-label="Eliminar etiqueta urgente"`, usando el nombre correspondiente. |
 
-Tras la corrección, axe no reportó `label` en detalle y no reportó violaciones en las vistas analizadas. El test guarda los JSON como adjuntos de Playwright. `html lang="es"` está presente, los enlaces de proyectos son enlaces nativos y el error de login usa `role="alert"`; estas observaciones de código no sustituyen una prueba manual con teclado y lector de pantalla.
+Tras la corrección, axe no reportó `label` en detalle y no reportó violaciones en las vistas analizadas. El test guarda los JSON como adjuntos de Playwright. En Chromium se recorrió la lista mediante pulsaciones Tab y se abrió un proyecto con Enter. La etiqueta `html` declara `lang="es"`; un login incorrecto muestra `Invalid credentials` mediante `role="alert"`. El mensaje describe el fallo, aunque aparece en inglés. Se verificaron el DOM y el comportamiento con Playwright, sin una sesión de lector de pantalla ni una revisión visual humana del foco.
 
 ## Historias de remediación
 
@@ -59,9 +67,9 @@ Tras la corrección, axe no reportó `label` en detalle y no reportó violacione
 **Accesibilidad.** Como persona que usa tecnología asistiva, quiero identificar los campos y la tarea abierta, para completar el formulario de manera autónoma.
 
 - CA-01: axe no informa `label` en detalle de tarea.
-- CA-02: el detalle tiene un encabezado principal con el título de la tarea.
+- CA-02: el botón de cada etiqueta expone un nombre que indica la acción y la etiqueta correspondiente.
 - CA-03: los controles se alcanzan y utilizan con teclado y conservan foco visible.
 
 ## Ejecución
 
-`npx playwright test a11y --project=chromium --workers=1`. En esta máquina el motor de migración de Prisma falló al preparar la base; para la ejecución se creó temporalmente la base aislada de E2E mediante la migración SQL con `sqlite3`. Se restauró la configuración normal después. No se realizaron pruebas sobre producción.
+`npx playwright test seguridad-accesibilidad a11y --project=chromium --workers=1`: 8 pruebas aprobadas. En esta máquina el motor de migración de Prisma falló al preparar la base; para la ejecución se creó temporalmente la base aislada de E2E mediante la migración SQL con `sqlite3`. Se restauró la configuración normal después. No se realizaron pruebas sobre producción.
