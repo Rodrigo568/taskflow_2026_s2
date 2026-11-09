@@ -335,6 +335,7 @@ export default function TaskDetailPage() {
           <input
             type="text"
             data-testid="tag-add-input"
+            aria-label="Nombre de la etiqueta"
             value={tagName}
             onChange={(e) => setTagName(e.target.value)}
           />
@@ -350,6 +351,7 @@ export default function TaskDetailPage() {
         <form className="form" data-testid="comment-add-form" onSubmit={onAddComment}>
           <textarea
             data-testid="comment-add-input"
+            aria-label="Comentario"
             value={commentBody}
             onChange={(e) => setCommentBody(e.target.value)}
           />
