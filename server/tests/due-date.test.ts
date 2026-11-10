@@ -27,9 +27,15 @@ describe('US-16: fecha de vencimiento', () => {
   });
 
   it('quita la fecha enviando null (CA-5)', async () => {
+    const assigned = await request(app).patch(`/api/tasks/${taskId}`).set(auth(token)).send({ dueDate: '2026-09-15' });
+    expect(assigned.status).toBe(200);
+    expect(assigned.body.dueDate).not.toBeNull();
     const res = await request(app).patch(`/api/tasks/${taskId}`).set(auth(token)).send({ dueDate: null });
     expect(res.status).toBe(200);
     expect(res.body.dueDate).toBeNull();
+    const read = await request(app).get(`/api/tasks/${taskId}`).set(auth(token));
+    expect(read.status).toBe(200);
+    expect(read.body.dueDate).toBeNull();
   });
 
   it('rechaza el formato inválido con 400 (CA-6)', async () => {
