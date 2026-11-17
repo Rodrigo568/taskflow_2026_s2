@@ -63,6 +63,16 @@ Se priorizó `task-card` sobre `comment-item` y `member-item` porque es la pieza
 - Se modificó `client/vite.config.ts` para que el destino del proxy se pueda configurar (`VITE_API_PROXY`). El valor por defecto sigue siendo `http://localhost:3000`, así que `npm run dev` funciona igual.
 - La primera vez hay que descargar el navegador: `npx playwright install chromium`.
 
+## Herramientas evaluadas y costos
+
+| Alternativa | Qué ofrece | Costo para TaskFlow |
+| --- | --- | --- |
+| Playwright Test | TypeScript, fixtures, control de procesos y trazas en la misma herramienta. Admite Chromium, Firefox y WebKit. | Se mantienen los datos de prueba, los localizadores y dos servidores. Actualizar Playwright puede requerir instalar de nuevo los binarios. Agregar motores aumenta el tiempo de CI. [Navegadores de Playwright](https://playwright.dev/docs/browsers) |
+| Cypress | Runner interactivo y depuración directa de comandos. Soporta navegadores de la familia Chrome, Firefox y WebKit experimental. | La migración obliga a adaptar fixtures, objetos y comandos al modelo de Cypress. No aporta una cobertura de navegador necesaria para el alcance actual. [Navegadores de Cypress](https://docs.cypress.io/app/references/launching-browsers) |
+| Selenium WebDriver | Automatización mediante el estándar WebDriver con bindings para varios lenguajes y ejecución remota. | Habría que elegir e integrar runner, fixtures, reportes y captura de diagnóstico. Una infraestructura remota agregaría configuración operativa. [Selenium WebDriver](https://www.selenium.dev/documentation/webdriver/) |
+
+Playwright reduce las integraciones que el equipo debe mantener y reutiliza TypeScript para las pruebas y los datos. Los objetos de página y de componente requieren actualizar sus localizadores cuando cambia la UI. Se concentran ahí para limitar el costo de cada cambio. El alcance actual de ejecución sigue siendo Chromium.
+
 ## Pendiente
 
 - Component Objects de `comment-item` (Detalle de tarea) y `member-item` (Miembros), cada uno con su Page Object.

@@ -2,6 +2,8 @@
 
 **Etiquetas sugeridas:** `performance`, `bug`
 
+**Severidad: media.** El volumen transferido y el trabajo del servidor crecen con la cantidad de proyectos. La corrida observada conservó un p95 de 32,23 ms y 0 % de errores HTTP. Registrado en el [issue #1](https://github.com/Rodrigo568/taskflow_2026_s2/issues/1).
+
 ## Criterio violado
 
 Especificación de Requerimientos v1.0, Requerimientos no funcionales, **Rendimiento 1**:
