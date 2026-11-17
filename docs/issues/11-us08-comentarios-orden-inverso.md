@@ -1,4 +1,4 @@
-**Issue:** pendiente de publicar
+**Issue:** [#12](https://github.com/Rodrigo568/taskflow_2026_s2/issues/12)
 
 **Título:** [Tareas · Comentarios] Los comentarios se devuelven y se muestran del más reciente al más antiguo
 

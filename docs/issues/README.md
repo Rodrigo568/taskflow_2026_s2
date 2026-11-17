@@ -14,4 +14,4 @@ Un archivo por bug, con la plantilla de la clase 8 (título, criterio violado ci
 | [08](08-rf002-nombre-proyecto-corto.md) · Proyecto sin nombre o de 2 caracteres | RF-002 | US-03 c1 | media | [#9](https://github.com/Rodrigo568/taskflow_2026_s2/issues/9) |
 | [09](09-us15-etiquetas-mayusculas.md) · "Bug" y "BUG" duplican la etiqueta | E2E US-15 | US-15 c1, c2 | media | [#10](https://github.com/Rodrigo568/taskflow_2026_s2/issues/10) |
 | [10](10-us15-etiqueta-duplicada.md) · Misma etiqueta dos veces | E2E US-15 | US-15 c3 | media | [#11](https://github.com/Rodrigo568/taskflow_2026_s2/issues/11) |
-| [11](11-us08-comentarios-orden-inverso.md) · Comentarios en orden inverso | E2E US-08 | US-08 c4 | baja | pendiente |
+| [11](11-us08-comentarios-orden-inverso.md) · Comentarios en orden inverso | E2E US-08 | US-08 c4 | baja | [#12](https://github.com/Rodrigo568/taskflow_2026_s2/issues/12) |

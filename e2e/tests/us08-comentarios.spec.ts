@@ -54,8 +54,8 @@ test.describe('US-08 · Comentarios', () => {
     taskDetailPage,
   }) => {
     // Bug: comments.repository.ts ordena por createdAt 'desc' y la UI muestra el
-    // más reciente primero. Ver docs/issues/11-us08-comentarios-orden-inverso.md.
-    test.fail(true, 'US-08 CA-4: los comentarios se devuelven del más reciente al más antiguo');
+    // más reciente primero.
+    test.fail(true, 'US-08 CA-4: los comentarios se devuelven del más reciente al más antiguo (issue #12)');
 
     const project = await api.createProject(session);
     const task = await api.createTask(session, project.id, { title: 'Hilo de comentarios' });
