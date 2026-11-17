@@ -19,6 +19,8 @@ export interface Task {
   title: string;
   status: TaskStatus;
   priority: TaskPriority;
+  assigneeId: string | null;
+  dueDate: string | null;
 }
 
 export interface NewTask {
@@ -68,6 +70,12 @@ export class TaskflowApi {
       headers: this.auth(session),
       data: { status },
     });
+    expect(res.status(), await res.text()).toBe(200);
+    return res.json();
+  }
+
+  async getTask(session: Session, taskId: string): Promise<Task> {
+    const res = await this.request.get(`tasks/${taskId}`, { headers: this.auth(session) });
     expect(res.status(), await res.text()).toBe(200);
     return res.json();
   }

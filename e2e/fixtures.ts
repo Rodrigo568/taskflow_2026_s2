@@ -1,5 +1,6 @@
 import { test as base } from '@playwright/test';
 import { BoardPage } from './pages/BoardPage';
+import { TaskDetailPage } from './pages/TaskDetailPage';
 import { Session, TaskflowApi } from './support/api';
 import { API_URL } from './support/env';
 
@@ -8,6 +9,7 @@ interface Fixtures {
   /** Usuario nuevo por test, con la sesión ya cargada en el navegador. */
   session: Session;
   boardPage: BoardPage;
+  taskDetailPage: TaskDetailPage;
 }
 
 export const test = base.extend<Fixtures>({
@@ -30,6 +32,10 @@ export const test = base.extend<Fixtures>({
 
   boardPage: async ({ page }, use) => {
     await use(new BoardPage(page));
+  },
+
+  taskDetailPage: async ({ page }, use) => {
+    await use(new TaskDetailPage(page));
   },
 });
 
