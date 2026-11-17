@@ -69,11 +69,14 @@ test('rechaza asignar una tarea a alguien que no integra el proyecto', async ({ 
   expect((await res.json()).error.message).toBe('The assignee must be a member of the project');
 });
 
-test('revisa el nombre accesible del botón para quitar una etiqueta', async ({ page, api, session }) => {
+test('identifica la acción y la etiqueta en cada botón de eliminación', async ({ page, api, session }) => {
   const project = await api.createProject(session);
   const task = await api.createTask(session, project.id, { title: 'Revisión de etiqueta' });
   await page.goto(`/projects/${project.id}/tasks/${task.id}`);
-  await page.getByTestId('tag-add-input').fill('urgente');
-  await page.getByTestId('tag-add-button').click();
-  await expect(page.getByTestId('tag-remove-button')).toHaveAccessibleName('×');
+  for (const name of ['urgente', 'diseño']) {
+    await page.getByRole('textbox', { name: 'Nombre de la etiqueta' }).fill(name);
+    await page.getByRole('button', { name: 'Agregar etiqueta' }).click();
+    const chip = page.getByTestId('tag-chip').filter({ hasText: name });
+    await expect(chip.getByTestId('tag-remove-button')).toHaveAccessibleName(`Eliminar etiqueta ${name}`);
+  }
 });

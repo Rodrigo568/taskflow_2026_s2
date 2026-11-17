@@ -324,6 +324,7 @@ export default function TaskDetailPage() {
               <button
                 type="button"
                 data-testid="tag-remove-button"
+                aria-label={`Eliminar etiqueta ${tag.name}`}
                 onClick={() => onRemoveTag(tag.id)}
               >
                 ×
