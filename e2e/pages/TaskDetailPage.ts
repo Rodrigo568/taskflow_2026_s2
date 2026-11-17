@@ -1,10 +1,11 @@
 import { Locator, Page, Response } from '@playwright/test';
+import { CommentItem } from '../components/CommentItem';
 import { TagChip } from '../components/TagChip';
 
 /**
  * Page Object del detalle de tarea. Conoce el formulario de edición (título,
- * asignado, vencimiento), las etiquetas y el mensaje de error, y delega cada
- * etiqueta en el Component Object TagChip.
+ * asignado, vencimiento), las etiquetas, los comentarios y el mensaje de error,
+ * y delega cada etiqueta en TagChip y cada comentario en CommentItem.
  *
  * Las acciones que llaman a la API devuelven la `Response`, así el test espera
  * la respuesta del servidor antes de mirar la pantalla.
@@ -20,6 +21,9 @@ export class TaskDetailPage {
   readonly tagInput: Locator;
   readonly tagAddButton: Locator;
   readonly tagChips: Locator;
+  readonly commentInput: Locator;
+  readonly commentAddButton: Locator;
+  readonly commentItems: Locator;
   readonly error: Locator;
 
   constructor(private readonly page: Page) {
@@ -33,6 +37,9 @@ export class TaskDetailPage {
     this.tagInput = page.getByTestId('tag-add-input');
     this.tagAddButton = page.getByTestId('tag-add-button');
     this.tagChips = page.getByTestId('tag-chip');
+    this.commentInput = page.getByTestId('comment-add-input');
+    this.commentAddButton = page.getByTestId('comment-add-button');
+    this.commentItems = page.getByTestId('comment-item');
     this.error = page.getByTestId('error-message');
   }
 
@@ -93,6 +100,22 @@ export class TaskDetailPage {
   tag(name: string): TagChip {
     const byName = this.page.getByTestId('tag-chip-name').getByText(name, { exact: true });
     return new TagChip(this.page, this.tagChips.filter({ has: byName }));
+  }
+
+  /** Publica un comentario y devuelve la respuesta del POST /tasks/:id/comments. */
+  async addComment(body: string): Promise<Response> {
+    await this.commentInput.fill(body);
+    const response = this.page.waitForResponse(
+      (r) => r.request().method() === 'POST' && /\/api\/tasks\/[^/]+\/comments$/.test(r.url()),
+    );
+    await this.commentAddButton.click();
+    return response;
+  }
+
+  /** Comentario identificado por su texto exacto. */
+  comment(body: string): CommentItem {
+    const byBody = this.page.getByTestId('comment-item-body').getByText(body, { exact: true });
+    return new CommentItem(this.page, this.commentItems.filter({ has: byBody }));
   }
 
   async backToBoard(): Promise<void> {

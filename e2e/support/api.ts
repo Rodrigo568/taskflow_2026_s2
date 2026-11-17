@@ -74,6 +74,15 @@ export class TaskflowApi {
     return res.json();
   }
 
+  /** El owner agrega por API a otro usuario registrado como miembro del proyecto. */
+  async addMember(owner: Session, projectId: string, email: string): Promise<void> {
+    const res = await this.request.post(`projects/${projectId}/members`, {
+      headers: this.auth(owner),
+      data: { email },
+    });
+    expect(res.status(), await res.text()).toBe(201);
+  }
+
   async getTask(session: Session, taskId: string): Promise<Task> {
     const res = await this.request.get(`tasks/${taskId}`, { headers: this.auth(session) });
     expect(res.status(), await res.text()).toBe(200);

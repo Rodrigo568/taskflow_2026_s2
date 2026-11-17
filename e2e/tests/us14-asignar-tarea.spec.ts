@@ -1,5 +1,5 @@
-import type { Page } from '@playwright/test';
 import { expect, test } from '../fixtures';
+import type { MembersPage } from '../pages/MembersPage';
 import type { Session, TaskflowApi } from '../support/api';
 
 /**
@@ -15,16 +15,15 @@ import type { Session, TaskflowApi } from '../support/api';
  */
 test.describe('US-14 · Asignar tarea', () => {
   /** Registra a un segundo usuario y el owner lo agrega desde la pantalla Miembros. */
-  async function addTeammate(api: TaskflowApi, page: Page, projectId: string): Promise<Session> {
+  async function addTeammate(
+    api: TaskflowApi,
+    membersPage: MembersPage,
+    projectId: string,
+  ): Promise<Session> {
     const teammate = await api.register();
-    await page.goto(`/projects/${projectId}/members`);
-    await page.getByTestId('member-email-input').fill(teammate.user.email);
-    const added = page.waitForResponse(
-      (r) => r.request().method() === 'POST' && r.url().endsWith(`/projects/${projectId}/members`),
-    );
-    await page.getByTestId('member-add-button').click();
-    expect((await added).status()).toBe(201);
-    await expect(page.getByTestId('member-item-email').getByText(teammate.user.email)).toBeVisible();
+    await membersPage.goto(projectId);
+    expect((await membersPage.add(teammate.user.email)).status()).toBe(201);
+    await expect(membersPage.member(teammate.user.email).root).toBeVisible();
     return teammate;
   }
 
@@ -33,10 +32,10 @@ test.describe('US-14 · Asignar tarea', () => {
     session,
     taskDetailPage,
     boardPage,
-    page,
+    membersPage,
   }) => {
     const project = await api.createProject(session);
-    const bob = await addTeammate(api, page, project.id);
+    const bob = await addTeammate(api, membersPage, project.id);
     const task = await api.createTask(session, project.id, { title: 'Diseñar pantalla' });
     await taskDetailPage.goto(project.id, task.id);
 
@@ -59,10 +58,10 @@ test.describe('US-14 · Asignar tarea', () => {
     session,
     taskDetailPage,
     boardPage,
-    page,
+    membersPage,
   }) => {
     const project = await api.createProject(session);
-    const bob = await addTeammate(api, page, project.id);
+    const bob = await addTeammate(api, membersPage, project.id);
     const task = await api.createTask(session, project.id, {
       title: 'Escribir tests',
       assigneeId: session.user.id,
@@ -87,9 +86,10 @@ test.describe('US-14 · Asignar tarea', () => {
     taskDetailPage,
     boardPage,
     page,
+    membersPage,
   }) => {
     const project = await api.createProject(session);
-    const bob = await addTeammate(api, page, project.id);
+    const bob = await addTeammate(api, membersPage, project.id);
     const task = await api.createTask(session, project.id, {
       title: 'Revisar PR',
       assigneeId: bob.user.id,

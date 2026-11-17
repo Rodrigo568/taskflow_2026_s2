@@ -24,7 +24,10 @@ Las pruebas e2e viven en `e2e/` y se configuran en `playwright.config.ts`. Se co
 | --- | --- | --- |
 | Component Object | `e2e/components/TaskCard.ts` | Encapsula una tarjeta de tarea: sus datos (título, prioridad, responsable, vencimiento, comentarios, estado) y sus acciones (`changeStatus`, `open`). Recibe el `Locator` raíz de una tarjeta y busca todo dentro de él. |
 | Page Object | `e2e/pages/BoardPage.ts` | Representa la pantalla del tablero: navegación, columnas, contador y total. Compone el Component Object: `card(title, status?)` devuelve un `TaskCard`. |
-| Fixtures de Playwright | `e2e/fixtures.ts` | Inyecta en cada test `api`, `session` (usuario nuevo con la sesión cargada en `localStorage`) y `boardPage`. Los tests declaran lo que necesitan en sus parámetros. |
+| Component Objects del detalle | `e2e/components/CommentItem.ts`, `e2e/components/TagChip.ts` | Un comentario (texto, autor, fecha, `delete()`) y una etiqueta (nombre, `remove()`). Las acciones devuelven la respuesta de la API para que el test la espere antes del assert. |
+| Page Object del detalle | `e2e/pages/TaskDetailPage.ts` | Formulario de edición (título, asignado, vencimiento), etiquetas y comentarios. `comment(texto)` devuelve un `CommentItem` y `tag(nombre)` un `TagChip`. |
+| Component Object y Page Object de Miembros | `e2e/components/MemberItem.ts`, `e2e/pages/MembersPage.ts` | Cada fila expone email, rol y `remove()`; la pantalla conoce el alta por email, la nota de solo lectura y `member(email)`, que devuelve un `MemberItem`. |
+| Fixtures de Playwright | `e2e/fixtures.ts` | Inyecta en cada test `api`, `session` (usuario nuevo con la sesión cargada en `localStorage`), `boardPage`, `taskDetailPage` y `membersPage`. Los tests declaran lo que necesitan en sus parámetros. |
 | Preparación de datos por API | `e2e/support/api.ts` (`TaskflowApi`) | Crea usuarios, proyectos, tareas, estados y comentarios con solicitudes HTTP. El navegador solo recorre lo que el test verifica. |
 | Localizadores por `data-testid` | `testIdAttribute` en la configuración; `getByTestId` en componentes y páginas | Los selectores no dependen de clases CSS ni de textos visibles que pueden cambiar. |
 | Datos únicos por test | `uniqueEmail()` y fixture `session` | Cada test registra su propio usuario y proyecto, así pueden correr en paralelo (`fullyParallel`) sin compartir estado. |
@@ -44,7 +47,7 @@ Se eligió el tablero y su tarjeta como primera pieza. Los criterios que la just
 
 La pantalla igual tiene su Page Object (`BoardPage`), pero es delgado: sabe navegar y encontrar columnas y tarjetas, y delega el detalle en `TaskCard`. Es la composición recomendada: **Page Object para la pantalla, Component Object para la pieza repetida**.
 
-Se priorizó `task-card` sobre `comment-item` y `member-item` porque es la pieza con más datos y la única con una acción que cambia el estado de la aplicación: al cambiar el estado, la tarjeta se mueve de columna. Las otras dos se modelan igual (`CommentItem`, `MemberItem` con su Page Object) cuando se cubran esas pantallas.
+Se priorizó `task-card` sobre `comment-item` y `member-item` porque es la pieza con más datos y la única con una acción que cambia el estado de la aplicación: al cambiar el estado, la tarjeta se mueve de columna. Las otras dos se modelaron igual cuando se cubrieron esas pantallas: `CommentItem` dentro de `TaskDetailPage` y `MemberItem` dentro de `MembersPage`.
 
 ## Por qué convienen estos patrones
 
@@ -75,13 +78,12 @@ Playwright reduce las integraciones que el equipo debe mantener y reutiliza Type
 
 ## Pendiente
 
-- Component Objects de `comment-item` (Detalle de tarea) y `member-item` (Miembros), cada uno con su Page Object.
 - Page Objects de login y proyectos, cuando se cubran esos flujos por la UI.
 
 ## Referencias del repositorio
 
 - Configuración: `playwright.config.ts`, `e2e/support/env.ts`, `e2e/support/fresh-db.cjs`.
-- Component Object: `e2e/components/TaskCard.ts`.
-- Page Object: `e2e/pages/BoardPage.ts`.
+- Component Objects: `e2e/components/TaskCard.ts`, `TagChip.ts`, `CommentItem.ts`, `MemberItem.ts`.
+- Page Objects: `e2e/pages/BoardPage.ts`, `TaskDetailPage.ts`, `MembersPage.ts`.
 - Fixtures y datos: `e2e/fixtures.ts`, `e2e/support/api.ts`.
-- Tests: `e2e/tests/board.spec.ts`.
+- Tests: `e2e/tests/` (tablero, historias US-08, US-11, US-12, US-14, US-15 y US-16, seguridad y accesibilidad).
